@@ -13,7 +13,13 @@ from PIL import Image
 
 import os
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 import shutil
+
+
 
 try:
 
@@ -80,9 +86,15 @@ app = FastAPI(
 
 # =========================================================
 
-MONGO_URL = "mongodb://localhost:27017"
+MONGO_URL = os.getenv("MONGO_URL")
 
-client = MongoClient(MONGO_URL)
+if not MONGO_URL:
+    raise ValueError("MONGO_URL is missing in .env file")
+
+client = MongoClient(
+    MONGO_URL,
+    serverSelectionTimeoutMS=10000
+)
 
 db = client["careerai"]
 
@@ -471,7 +483,7 @@ def forgot_password(data: dict):
         }
 
     now = datetime.now(timezone.utc)
-    last_sent = user.get("otp_sent_at")
+    last_sent = user.get("reset_otp_sent_at")
     if last_sent:
         if last_sent.tzinfo is None:
             last_sent = last_sent.replace(tzinfo=timezone.utc)
